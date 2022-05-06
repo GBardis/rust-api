@@ -1,0 +1,53 @@
+version: '3.7'
+services:
+  wp-users:
+    container_name: wp-users
+    image: wappier/wp-users
+    environment:
+      MONGO_URL: mongodb://testAdmin:w4pp13R@wp-mongo:27017/wp_users
+      REDIS_URL: redis://:w4pp13R@redis:6379/0
+    links:
+      - redis
+      - redis-commander
+      - mongo
+      - mongo-express
+  mongo:
+    container_name: wp-mongo
+    image: 'mongo:4'
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: testAdmin
+      MONGO_INITDB_ROOT_PASSWORD: w4pp13R
+    volumes:
+      - ./mongo-init/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+  mongo-express:
+    container_name: wp-mongo-express
+    image: mongo-express
+    ports:
+      - 8081:8081
+    depends_on:
+      - mongo
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: testAdmin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: w4pp13R
+      ME_CONFIG_MONGODB_URL: mongodb://testAdmin:w4pp13R@wp-mongo:27017/
+  redis:
+    container_name: wp-redis
+    image: 'redis:alpine'
+    command: redis-server --save 60 1 --requirepass w4pp13R
+    ports:
+      - "6379:6379"
+  redis-commander:
+    container_name: wp-redis-commander
+    image: rediscommander/redis-commander:latest
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=redis:6379
+      - REDIS_PASSWORD=w4pp13R
+      - HTTP_USER=testAdmin
+      - HTTP_PASSWORD=w4pp13R
+    ports:
+      - 8082:8081
+    depends_on:
+      - redis
